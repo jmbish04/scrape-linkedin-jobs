@@ -4,7 +4,7 @@
 # =====================================================
 
 name = "scrape-linkedin-jobs"
-main = "src/index.Ts"
+main = "src/index.ts"
 compatibility_date = "2025-10-28"
 node_compat = true
 workers_dev = true
@@ -56,7 +56,7 @@ max_batch_timeout = 30
 [[durable_objects.bindings]]
 name = "JOBS_ACTOR"
 class_name = "JobsActor"
-script_name = "linkedin-jobs-worker"
+script_name = "scrape-linkedin-jobs"
 
 [[migrations]]
 tag = "v1"
