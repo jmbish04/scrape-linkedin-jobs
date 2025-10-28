@@ -1,0 +1,37 @@
+{
+  "name": "scrape-linkedin-jobs",
+  "version": "1.0.0",
+  "description": "AI-augmented Cloudflare Worker for job discovery, vectorization, and classification",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "tsc",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "d1:migrations": "wrangler d1 migrations apply linkedin_jobs",
+    "d1:local": "wrangler d1 execute linkedin_jobs --local --command",
+    "d1:remote": "wrangler d1 execute linkedin_jobs --command"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "job-scraping",
+    "ai",
+    "vectorization",
+    "linkedin"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ts-jobspy": "^1.0.0",
+    "linkedin-jobs-api": "^2.2.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241022.0",
+    "@cloudflare/vitest-pool-workers": "^0.5.4",
+    "typescript": "^5.7.2",
+    "wrangler": "^3.86.1",
+    "vitest": "^2.1.8"
+  }
+}
