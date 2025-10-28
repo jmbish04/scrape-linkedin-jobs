@@ -278,14 +278,7 @@ const apiKey = env.LINKEDIN_API_KEY;
 ```
 
 ### Rate Limiting
-Consider adding rate limiting to public endpoints:
-```typescript
-// In src/index.ts
-const rateLimiter = new RateLimiter(env.KV);
-if (!await rateLimiter.allow(clientIP)) {
-  return new Response('Rate limit exceeded', { status: 429 });
-}
-```
+Consider adding rate limiting to public endpoints. Cloudflare provides built-in rate limiting at the edge through WAF rules or you can implement custom rate limiting using KV storage. See [Cloudflare Rate Limiting docs](https://developers.cloudflare.com/waf/rate-limiting-rules/) for more information.
 
 ## Production Checklist
 

@@ -2,14 +2,24 @@
  * Utility functions
  */
 
-import { createHash } from 'crypto';
-
 /**
- * Generate unique job ID from URL, company, and title
+ * Generate unique job ID from URL, company, and title using Web Crypto API
  */
-export function generateJobId(url: string, company: string, title: string): string {
+export async function generateJobId(url: string, company: string, title: string): Promise<string> {
   const normalized = `${url}|${company}|${title}`.toLowerCase().trim();
-  return createHash('sha256').update(normalized).digest('hex').substring(0, 16);
+
+  // Convert string to Uint8Array
+  const encoder = new TextEncoder();
+  const data = encoder.encode(normalized);
+
+  // Generate SHA-256 hash using Web Crypto API
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+
+  // Convert to hex string
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  return hashHex.substring(0, 16);
 }
 
 /**

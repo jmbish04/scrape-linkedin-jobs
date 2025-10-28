@@ -69,7 +69,12 @@ export interface ScraperConfig {
   searchTerms: string[];
   locations: string[];
   resultsWanted: number;
-  targetRoles: string[];
+  hoursOld: number;
+  countryIndeed: string;
+  dateSincePosted: string;
+  jobType: string;
+  remoteFilter: string;
+  experienceLevel: string;
 }
 
 export const SCRAPER_CONFIG: ScraperConfig = {
@@ -88,11 +93,10 @@ export const SCRAPER_CONFIG: ScraperConfig = {
     'Austin'
   ],
   resultsWanted: 100,
-  targetRoles: [
-    'AI Product Manager',
-    'Data Strategy Lead',
-    'Innovation Strategist',
-    'Head of Product Operations',
-    'AI Program Manager'
-  ]
+  hoursOld: 168, // 1 week
+  countryIndeed: 'USA',
+  dateSincePosted: 'past Week',
+  jobType: 'full time',
+  remoteFilter: 'hybrid',
+  experienceLevel: 'senior'
 };

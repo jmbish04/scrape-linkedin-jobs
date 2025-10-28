@@ -28,8 +28,8 @@ export class JobsActor extends DurableObject {
     try {
       const { jobId, title, description, company } = await request.json();
 
-      if (!jobId || !title || !description) {
-        return new Response('Missing required fields', { status: 400 });
+      if (!jobId || !title) {
+        return new Response('Missing required fields: jobId and title', { status: 400 });
       }
 
       console.log(`🤖 Classifying job: ${title} at ${company}`);

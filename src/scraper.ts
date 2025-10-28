@@ -36,8 +36,8 @@ export async function scrapeWithJobSpy(
       searchTerm,
       location,
       resultsWanted,
-      hoursOld: 168, // 1 week
-      countryIndeed: 'USA'
+      hoursOld: SCRAPER_CONFIG.hoursOld,
+      countryIndeed: SCRAPER_CONFIG.countryIndeed
     });
 
     console.log(`✅ JobSpy retrieved ${results.length} jobs`);
@@ -72,10 +72,10 @@ export async function scrapeWithLinkedInAPI(
     const queryOptions = {
       keyword,
       location,
-      dateSincePosted: 'past Week',
-      jobType: 'full time',
-      remoteFilter: 'hybrid',
-      experienceLevel: 'senior',
+      dateSincePosted: SCRAPER_CONFIG.dateSincePosted,
+      jobType: SCRAPER_CONFIG.jobType,
+      remoteFilter: SCRAPER_CONFIG.remoteFilter,
+      experienceLevel: SCRAPER_CONFIG.experienceLevel,
       limit: String(limit),
       sortBy: 'recent'
     };
@@ -119,7 +119,7 @@ export async function scrapeAllJobs(): Promise<Job[]> {
       }
 
       // Stage 3: Normalize to Job format
-      const normalizedJobs = rawJobs.map(raw => normalizeJob(raw));
+      const normalizedJobs = await Promise.all(rawJobs.map(raw => normalizeJob(raw)));
       allJobs.push(...normalizedJobs);
 
       // Rate limiting - be respectful
@@ -134,8 +134,8 @@ export async function scrapeAllJobs(): Promise<Job[]> {
 /**
  * Normalize raw job data to standard Job format
  */
-function normalizeJob(raw: RawJobData): Job {
-  const id = generateJobId(raw.url, raw.company, raw.title);
+async function normalizeJob(raw: RawJobData): Promise<Job> {
+  const id = await generateJobId(raw.url, raw.company, raw.title);
 
   return {
     id,
@@ -178,15 +178,17 @@ function normalizeDate(date: string | null | undefined): string | null {
   if (!date) return null;
 
   try {
-    // Handle relative dates like "2 days ago"
+    // Handle relative dates like "2 days ago" or "Posted 2 days ago"
     if (date.includes('ago')) {
       const now = new Date();
+      // Extract number from string using regex
+      const numberMatch = date.match(/\d+/);
+      const value = parseInt(numberMatch?.[0] || '0');
+
       if (date.includes('day')) {
-        const days = parseInt(date);
-        now.setDate(now.getDate() - days);
+        now.setDate(now.getDate() - value);
       } else if (date.includes('hour')) {
-        const hours = parseInt(date);
-        now.setHours(now.getHours() - hours);
+        now.setHours(now.getHours() - value);
       }
       return now.toISOString().split('T')[0];
     }

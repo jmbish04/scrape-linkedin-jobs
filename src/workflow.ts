@@ -32,11 +32,11 @@ export class JobsWorkflow extends WorkflowEntrypoint<Env> {
       return await upsertJobs(this.env, jobs);
     });
 
-    // Step 4: Vectorize new jobs
+    // Step 4: Vectorize all jobs (upsert is idempotent, safe to re-vectorize)
     const vectorizedCount = await step.do('vectorize-jobs', async () => {
       console.log('📊 Generating embeddings...');
-      const newJobsToVectorize = jobs.slice(0, newJobs);
-      return await vectorizeJobs(this.env, newJobsToVectorize);
+      // Vectorize all jobs - the upsert operation in Vectorize is idempotent
+      return await vectorizeJobs(this.env, jobs);
     });
 
     // Step 5: Get unclassified jobs and enqueue for classification

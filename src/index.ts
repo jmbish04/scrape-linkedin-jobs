@@ -185,7 +185,7 @@ async function handleGetJobs(env: Env, url: URL): Promise<Response> {
 /**
  * Search jobs by text query
  */
-async function handleSearchJobs(env: Env, url: URL): Response {
+async function handleSearchJobs(env: Env, url: URL): Promise<Response> {
   const query = url.searchParams.get('q');
   if (!query) {
     return new Response('Missing query parameter', { status: 400 });
@@ -201,7 +201,7 @@ async function handleSearchJobs(env: Env, url: URL): Response {
 /**
  * Semantic search using vector embeddings
  */
-async function handleSemanticSearch(env: Env, url: URL): Response {
+async function handleSemanticSearch(env: Env, url: URL): Promise<Response> {
   const query = url.searchParams.get('q');
   const topK = parseInt(url.searchParams.get('limit') || '10');
 
@@ -219,7 +219,7 @@ async function handleSemanticSearch(env: Env, url: URL): Response {
 /**
  * Find similar jobs
  */
-async function handleSimilarJobs(env: Env, url: URL): Response {
+async function handleSimilarJobs(env: Env, url: URL): Promise<Response> {
   const jobId = url.searchParams.get('id');
   if (!jobId) {
     return new Response('Missing job ID parameter', { status: 400 });
@@ -235,7 +235,7 @@ async function handleSimilarJobs(env: Env, url: URL): Response {
 /**
  * Manually trigger workflow
  */
-async function handleManualTrigger(env: Env, ctx: ExecutionContext): Response {
+async function handleManualTrigger(env: Env, ctx: ExecutionContext): Promise<Response> {
   console.log('🔄 Manual workflow trigger received...');
 
   const workflow = await env.JOBS_WORKFLOW.create();
@@ -261,28 +261,27 @@ async function handleManualTrigger(env: Env, ctx: ExecutionContext): Response {
 /**
  * System status and statistics
  */
-async function handleStatus(env: Env): Response {
+async function handleStatus(env: Env): Promise<Response> {
   try {
-    // Get stats from DB
-    const totalJobs = await env.DB.prepare('SELECT COUNT(*) as count FROM jobs')
-      .first<{ count: number }>();
+    // Get stats in parallel for better performance
+    const [totalJobsResult, classifiedJobsResult, recentRuns, lastRun] = await Promise.all([
+      env.DB.prepare('SELECT COUNT(*) as count FROM jobs').first<{ count: number }>(),
+      env.DB.prepare('SELECT COUNT(*) as count FROM job_metadata').first<{ count: number }>(),
+      getRecentRuns(env, 5),
+      env.KV.get('latest_run', 'json')
+    ]);
 
-    const classifiedJobs = await env.DB.prepare(
-      'SELECT COUNT(*) as count FROM job_metadata'
-    ).first<{ count: number }>();
-
-    const recentRuns = await getRecentRuns(env, 5);
-
-    const lastRun = await env.KV.get('latest_run', 'json');
+    const totalJobs = totalJobsResult?.count || 0;
+    const classifiedJobs = classifiedJobsResult?.count || 0;
 
     return new Response(
       JSON.stringify({
         status: 'operational',
         timestamp: new Date().toISOString(),
         stats: {
-          totalJobs: totalJobs?.count || 0,
-          classifiedJobs: classifiedJobs?.count || 0,
-          unclassifiedJobs: (totalJobs?.count || 0) - (classifiedJobs?.count || 0)
+          totalJobs,
+          classifiedJobs,
+          unclassifiedJobs: totalJobs - classifiedJobs
         },
         lastRun,
         recentRuns: recentRuns.slice(0, 3)
@@ -308,7 +307,7 @@ async function handleStatus(env: Env): Response {
 /**
  * Get recent scraper runs
  */
-async function handleGetRuns(env: Env): Response {
+async function handleGetRuns(env: Env): Promise<Response> {
   const runs = await getRecentRuns(env, 20);
 
   return new Response(JSON.stringify({ runs, count: runs.length }), {
