@@ -149,7 +149,7 @@ Copy the database ID to `wrangler.toml`
 
 #### Create KV Namespace
 ```bash
-wrangler kv:namespace create "JOBS_KV"
+wrangler kv:namespace create "KV"
 ```
 
 #### Create R2 Bucket
