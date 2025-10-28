@@ -1,0 +1,136 @@
+# =====================================================
+#  Cloudflare Worker: linkedin-jobs-worker
+#  Core AI + Data Pipeline for Job Discovery and Vectorization
+# =====================================================
+
+name = "scrape-linkedin-jobs"
+main = "src/index.Ts"
+compatibility_date = "2025-10-28"
+node_compat = true
+workers_dev = true
+account_id = "your-account-id"
+
+# -----------------------------------------------------
+# Cron Trigger (daily @ 08:00 UTC)
+# -----------------------------------------------------
+[triggers]
+crons = ["0 8 * * *"]
+
+# -----------------------------------------------------
+# D1 Database
+# -----------------------------------------------------
+[[d1_databases]]
+binding = "DB"
+database_name = "linkedin_jobs"
+database_id = "89ab74f1-322a-41f2-9429-c66bddd80451"
+
+# -----------------------------------------------------
+# KV Namespace
+# -----------------------------------------------------
+[[kv_namespaces]]
+binding = "KV"
+id = "7741481afedd4a9aa463435dc6b3981e"
+
+# -----------------------------------------------------
+# R2 Storage Bucket
+# -----------------------------------------------------
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "linkedin-jobs-storage"
+
+# -----------------------------------------------------
+# Queues (Producer & Consumer)
+# -----------------------------------------------------
+[[queues.producers]]
+binding = "JOBS_QUEUE"
+queue = "linkedin-jobs-queue"
+
+[[queues.consumers]]
+queue = "linkedin-jobs-queue"
+max_batch_size = 10
+max_batch_timeout = 30
+
+# -----------------------------------------------------
+# Durable Objects
+# -----------------------------------------------------
+[[durable_objects.bindings]]
+name = "JOBS_ACTOR"
+class_name = "JobsActor"
+script_name = "linkedin-jobs-worker"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["JobsActor"]
+
+# -----------------------------------------------------
+# Vectorize (AI Embeddings Storage)
+# -----------------------------------------------------
+[[vectorize]]
+binding = "JOBS_VECTORIZE"
+index_name = "linkedin-jobs-vectors"
+
+# -----------------------------------------------------
+# Workers AI (LLM / Embedding Model)
+# -----------------------------------------------------
+[ai]
+binding = "AI"
+
+# -----------------------------------------------------
+# Workflows (Job Classification / Orchestration)
+# -----------------------------------------------------
+[[workflows]]
+binding = "JOBS_WORKFLOW"
+name = "linkedin-jobs-workflow"
+class_name = "JobsWorkflow"
+
+# -----------------------------------------------------
+# Environment Variables
+# -----------------------------------------------------
+[vars]
+ENVIRONMENT = "production"
+API_VERSION = "v1"
+MAX_RETRIES = "3"
+
+# -----------------------------------------------------
+# Secrets (add via: wrangler secret put LINKEDIN_API_KEY)
+# -----------------------------------------------------
+# LINKEDIN_API_KEY
+# WEBHOOK_SECRET
+
+# -----------------------------------------------------
+# Observability
+# -----------------------------------------------------
+[observability]
+enabled = true
+
+# -----------------------------------------------------
+# Build Settings
+# -----------------------------------------------------
+[build]
+command = "npm run build"
+watch_paths = ["src/**/*.js"]
+
+# -----------------------------------------------------
+# Dev Mode
+# -----------------------------------------------------
+[dev]
+port = 8787
+local_protocol = "http"
+
+# -----------------------------------------------------
+# Compatibility Flags
+# -----------------------------------------------------
+compatibility_flags = [
+  "nodejs_compat",
+  "streams_enable_constructors"
+]
+
+# -----------------------------------------------------
+# Optional Performance / Placement / Limits
+# -----------------------------------------------------
+# [placement]
+# mode = "smart"
+
+# [limits]
+# cpu_ms = 50
+# memory_mb = 128
